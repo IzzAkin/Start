@@ -1,0 +1,84 @@
+package checker;
+import java.io.*;
+import java.util.*;
+
+public class Sesmag {
+	// Helper class to track temperature data for each location static class LocationData
+	static class LocationData {
+		double minTemp = Double.MAX_VALUE;
+		double maxTemp = Double.MIN_VALUE;
+		double totalTemp = 0.0; 
+		long count = 0;
+
+		// Update the data with a new temperature value
+		void update(double temp) {
+			minTemp = Math.min(minTemp, temp); // Update minTemp
+			maxTemp = Math.max(maxTemp, temp); /// Update maxTemp
+			totalTemp += temp; //Add to totalTemp
+			count++; 
+		}// Increment count of the same weather station
+		// Calculate the mean temperature 
+		double mean() {
+			return totalTemp / count;
+		}
+	}
+	// Main Method
+	public static void main(String[] args) {
+
+		// Path to .text file
+		String filePath = ("C:\\Users\\Elijah\\Downloads\\real_weather_stations.txt");
+
+		// TreeMap to store stations in alphabetical order
+		TreeMap<String, LocationData> locationDataMap = new TreeMap<>(); 
+
+		try (BufferedReader reader = new BufferedReader(new FileReader (filePath))) {
+			String line;
+
+			// Process each line
+			while ((line = reader.readLine()) != null) {
+				try {
+					// Splitting line at "3" to handle your specific format
+					String[] parts = line.split(";");
+					// Ensure there are exactly 2 parts (location and temperature)
+					if (parts.length != 2) {
+						System.err.println("Skipping Invalid data formats " + line); 
+						continue;
+					}
+					// Extract location and temperature with trimming
+					String location = parts[0].trim(); // Get location	
+					double temp = Double.parseDouble(parts[1].trim()); // Get temperature as string
+					// Get or create a locationData object for this location
+
+					LocationData data = locationDataMap.getOrDefault(location, new LocationData());
+					// Update the temperature data for this location
+					data.update(temp);
+					// Put the updated data back in the TreeMap
+					locationDataMap.put(location, data);
+
+				} catch (NumberFormatException e) {
+					// Skip invalid temperature values and print a warning
+
+					System.err.println("Skipping invalid temperature values: " + line);
+				} catch (Exception e) {
+					// Catch any other unexpected exceptions and continue processing
+					System.err.println("Error processing line " + line);
+					e.printStackTrace();
+				}
+			}
+
+			// Printing the results in alphabetical order
+			for (Map.Entry<String, LocationData> entry : locationDataMap.entrySet()) {
+				String location = entry.getKey();
+				LocationData data = entry.getValue();
+
+				// Print the data for every location
+				System.out.println("Locations: " + location);
+				System.out.println(" Min Temperatures: " + data.minTemp);
+				System.out.println(" Max Temperatures: " + data.maxTemp);
+				System.out.println(" Mean Temperature: " + data.mean());
+			}
+
+		}catch (IOException e) {
+			e.printStackTrace(); // Handle file reading errors
+		}
+	}}
